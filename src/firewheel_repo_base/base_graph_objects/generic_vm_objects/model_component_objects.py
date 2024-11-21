@@ -50,7 +50,7 @@ class GenericRouter:
                 but this parameter also provides that ability. Defaults to :py:data:`None`.
 
         Raises:
-            RuntimeError: Occurs if the router does not have a name.
+            NameError: Occurs if the router does not have a name.
 
         Attributes:
             name (str): The hostname of this router.
@@ -62,8 +62,9 @@ class GenericRouter:
         self.type = "router"
 
         # A name must be specified when using a GenericRouter.
-        if (self.name := getattr(self, "name", name)) is None:
-            raise RuntimeError("Name must be specified for router!")
+        self.name = getattr(self, "name", None)
+        if self.name is None:
+            raise NameError("Name must be specified for router!")
 
         # Overwrite the Vertex name if one is provided
         if name:

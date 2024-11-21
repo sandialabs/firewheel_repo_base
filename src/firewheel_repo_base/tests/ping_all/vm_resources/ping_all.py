@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import json
 import ipaddress
@@ -24,7 +23,7 @@ class PingAll:
         """
         self.ips = ip_list
         # We need a standard path for the status file
-+        self.status_file = Path("/tmp/status")  # noqa: S108
+        self.status_file = Path("/tmp/status")  # noqa: S108
 
     def run(self):
         """
