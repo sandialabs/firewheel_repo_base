@@ -1,0 +1,12 @@
+name: minimega.resolve_vm_images
+attributes:
+    depends:
+        - topology
+    provides:
+        - vm_image_details
+model_components:
+    depends:
+        - linux.ubuntu1604
+        - vyos.helium118
+        - minimega.emulated_entities
+plugin: plugin.py

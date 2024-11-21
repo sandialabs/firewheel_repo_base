@@ -1,0 +1,8 @@
+name: misc.blank_graph
+attributes:
+    depends: []
+    provides:
+        - graph
+model_components:
+    depends: []
+plugin: plugin.py

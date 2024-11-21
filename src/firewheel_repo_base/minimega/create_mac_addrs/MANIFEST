@@ -1,0 +1,9 @@
+name: minimega.create_mac_addresses
+attributes:
+    depends:
+        - topology
+    provides:
+        - mac_addresses
+model_components:
+    depends: []
+plugin: plugin.py

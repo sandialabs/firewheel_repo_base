@@ -1,0 +1,11 @@
+name: minimega.schedules_ready
+attributes:
+    depends:
+        - topology
+        - ips
+        - vm_image_details
+        - sent_arp
+    provides:
+        - schedules_ready
+model_components:
+    depends: []

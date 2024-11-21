@@ -1,0 +1,13 @@
+name: tests.ping_all
+attributes:
+    depends:
+        - topology
+    provides:
+        - ping_all
+model_components:
+    depends:
+        - base_objects
+        - generic_vm_objects
+plugin: plugin.py
+vm_resources:
+    - vm_resources/**

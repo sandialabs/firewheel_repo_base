@@ -1,0 +1,12 @@
+name: tests.check_times
+attributes:
+    depends:
+        - topology
+    provides:
+        - check_times
+model_components:
+    depends:
+        - base_objects
+plugin: plugin.py
+vm_resources:
+    - vm_resources/**

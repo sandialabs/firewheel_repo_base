@@ -1,0 +1,12 @@
+name: control_network
+attributes:
+    depends:
+        - topology
+    precedes:
+        - mac_addresses
+    provides:
+        - control_network
+model_components:
+    depends:
+        - base_objects
+plugin: plugin.py

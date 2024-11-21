@@ -1,0 +1,9 @@
+name: common.dropper
+attributes:
+    depends: []
+    provides: []
+model_components:
+    depends: []
+vm_resources:
+    - dropper.py
+plugin: plugin.py

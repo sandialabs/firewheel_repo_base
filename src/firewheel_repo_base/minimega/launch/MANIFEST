@@ -1,0 +1,7 @@
+name: minimega.launch
+attributes:
+    depends:
+        - minimega_parsed_experiment_graph
+    provides: []
+model_components:
+    depends: []

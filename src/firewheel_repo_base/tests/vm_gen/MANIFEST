@@ -1,0 +1,11 @@
+name: tests.vm_gen
+attributes:
+    depends:
+        - graph
+    provides:
+        - topology
+model_components:
+    depends:
+        - base_objects
+        - linux.ubuntu2204
+plugin: plugin.py

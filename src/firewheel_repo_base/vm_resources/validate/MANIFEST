@@ -1,0 +1,10 @@
+name: vm_resource.validate
+attributes:
+    depends:
+        - vm_resource_schedule_database
+    provides:
+        - validated_vm_resource_schedule_database
+model_components:
+    depends:
+        - base_objects
+plugin: plugin.py

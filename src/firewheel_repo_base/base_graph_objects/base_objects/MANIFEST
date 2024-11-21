@@ -1,0 +1,7 @@
+name: base_objects
+attributes:
+    depends: []
+    provides: []
+model_components:
+    depends: []
+model_component_objects: model_component_objects.py

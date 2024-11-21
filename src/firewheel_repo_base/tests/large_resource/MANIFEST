@@ -1,0 +1,11 @@
+attributes:
+    depends:
+        - topology
+    provides: []
+model_components:
+    depends:
+        - base_objects
+name: tests.large_resource
+plugin: plugin.py
+vm_resources:
+    - vm_resources/**

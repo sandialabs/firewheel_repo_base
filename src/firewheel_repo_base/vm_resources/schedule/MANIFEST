@@ -1,0 +1,11 @@
+name: vm_resource.schedule
+attributes:
+    depends:
+        - topology
+        - schedules_ready
+    provides:
+        - vm_resource_schedule_database
+model_components:
+    depends:
+        - base_objects
+plugin: plugin.py

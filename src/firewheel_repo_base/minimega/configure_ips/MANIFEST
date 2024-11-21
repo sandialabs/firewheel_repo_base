@@ -1,0 +1,9 @@
+name: minimega.configure_ips
+attributes:
+    depends:
+        - mac_addresses
+    provides:
+        - ips
+model_components:
+    depends: []
+plugin: plugin.py

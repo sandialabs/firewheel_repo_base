@@ -1,0 +1,16 @@
+name: minimega.parse_experiment_graph
+attributes:
+    depends:
+        - testbed_available
+        - mac_addresses
+        - ips
+        - vm_image_details
+        - topology
+        - validated_vm_resource_schedule_database
+    provides:
+        - minimega_parsed_experiment_graph
+model_components:
+    depends:
+        - minimega.emulated_entities
+        - base_objects
+plugin: plugin.py

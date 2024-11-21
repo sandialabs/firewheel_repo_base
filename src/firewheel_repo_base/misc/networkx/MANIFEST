@@ -1,0 +1,11 @@
+attributes:
+  depends:
+  - graph
+  precedes: []
+  provides: []
+model_component_objects: model_component_objects.py
+model_components:
+  depends:
+    - base_objects
+  precedes: []
+name: misc.networkx

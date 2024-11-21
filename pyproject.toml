@@ -1,0 +1,181 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "firewheel_repo_base"
+authors = [
+  { name="FIREWHEEL Developers", email="firewheel@sandia.gov" },
+]
+description = "This Model Component repository contains many of the basic objects necessary to create an experiment using FIREWHEEL."
+readme = "README.rst"
+dependencies = [
+  "firewheel",
+]
+requires-python = ">=3.8"
+license = {text = "Apache License (2.0)"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Telecommunications Industry",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Framework :: FIREWHEEL",
+    "Topic :: Internet",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Security",
+    "Topic :: System :: Clustering",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: System :: Emulators",
+    "Topic :: System :: Networking",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+"Homepage" = "https://www.sandia.gov/emulytics"
+
+[tool.setuptools_scm]
+
+[project.entry-points."firewheel.mc_repo"]
+repo_path = "firewheel_repo_base:__path__"
+
+[tool.doc8]
+# Ignore line length errors. Our preferred format is to have single sentences
+# on each line and to use the linewrap feature in a given text editor.
+ignore = ["D001"]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+# Assume Python 3.9
+target-version = "py39"
+
+
+extend-exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",        # pycodestyle
+    "F",        # pyflakes
+    "W",        # pycodestyle
+    "B",        # flake8-bugbear
+    "I",        # isort
+    "N",        # pep8-naming
+    "D",        # pydocstyle
+    "S",        # flake8-bandit
+    "BLE",      # flake8-blind-except
+    "A",        # flake8-builtins
+    "LOG",      # flake8-logging
+    "G",        # flake8-logging-format
+    "RSE",      # flake8-raise
+    "Q",        # flake8-quotes
+    "ARG",      # flake8-unused-arguments
+    "C4",       # flake8-comprehensions
+    "PLC",      # Pylint Convention
+    "PLE",      # Pylint Error
+    "PLR",      # Pylint Refactor
+    "PLW",      # Pylint Warning
+    "PERF",     # Perflint
+    "DOC",      # pydoclint
+    "RUF",      # Ruff-specific rules
+    # "RET",      # flake8-return
+    # "UP",       # pyupgrade
+    # "PTH",      # flake8-use-pathlib
+    # "TD",       # flake8-todos
+    # "SIM",      # flake8-simplify
+    # "DTZ",      # flake8-datetimez
+]
+
+# We may want to adhere to D205 and D415 in the future.
+ignore = [
+    "D100",     # Missing docstring in public module
+    "D105",     # Missing docstring in magic method
+    "D104",     # Missing docstring in public package
+    "D200",     # One-line docstring should fit on one line with quotes
+    "D202",     # No blank lines allowed after function docstring
+    "D205",     # 1 blank line required between summary line and description
+    "D212",     # Multi-line docstring summary should start at the first line
+    "D415",     # First line should end with a period, question mark, or exclamation point
+    "S101",     # Ignore assert statements
+    "S403",     # Ignore warnings about importing pickle
+    "S301",     # suspicious-pickle-usage
+    "S603",     # subprocess-without-shell-equals-true
+    "S404",     # Ignore warnings about importing subprocess
+    "S311",     # Ignore warnings about using random
+    "S608",     # Ignore warning about possible SQL injection. SQL is not used in FIREWHEEL.
+    "PLW2901",  # redefined-loop-name
+    "RUF100",   # unused-noqa
+    "RUF012",   # mutable-class-default
+    "PLR0904",  # too-many-public-methods
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0913",  # too-many-arguments
+    "PLR0914",  # too-many-locals
+    "PLR0915",  # too-many-statements
+    "PLR1702",  # too-many-nested-blocks
+    "PLR0917",  # too-many-positional-arguments
+    "PLR2004",  # magic-value-comparison
+    "PLR6301",  # no-self-use
+    "DOC502",   # docstring-extraneous-exception -- Has lots of false positives currently
+    "PERF203",  # try-except-in-loop
+    "PERF401",  # manual-list-comprehension
+]
+preview = true
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 120
+max-line-length = 120
+
+[tool.ruff.lint.isort]
+length-sort = true
+known-first-party = ["firewheel"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bandit]
+hardcoded-tmp-directory-extend = ["/scratch"]

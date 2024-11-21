@@ -1,0 +1,15 @@
+attributes:
+  depends:
+  - graph
+  precedes: []
+  provides:
+  - topology
+model_components:
+  depends:
+  - base_objects
+  - linux.ubuntu1604
+  precedes: []
+name: tests.qos
+plugin: plugin.py
+vm_resources:
+  - vm_resources/**

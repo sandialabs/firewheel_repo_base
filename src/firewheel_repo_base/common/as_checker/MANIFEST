@@ -1,0 +1,12 @@
+attributes:
+  depends:
+  - topology
+  precedes: []
+  provides:
+  - unique_as_nums
+model_components:
+  depends:
+  - generic_vm_objects
+  precedes: []
+name: as.checker
+plugin: plugin.py

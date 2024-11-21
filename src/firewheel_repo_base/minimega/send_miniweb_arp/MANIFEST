@@ -1,0 +1,9 @@
+name: minimega.send_miniweb_arp
+attributes:
+    depends:
+        - ips
+    provides:
+        - sent_arp
+model_components:
+    depends: []
+plugin: plugin.py

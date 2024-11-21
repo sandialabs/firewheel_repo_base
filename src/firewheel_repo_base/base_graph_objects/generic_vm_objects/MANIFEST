@@ -1,0 +1,8 @@
+name: generic_vm_objects
+attributes:
+    depends: []
+    provides: []
+model_components:
+    depends:
+        - base_objects
+model_component_objects: model_component_objects.py

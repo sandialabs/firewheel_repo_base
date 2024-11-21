@@ -1,0 +1,15 @@
+attributes:
+  depends:
+  - graph
+  precedes: []
+  provides:
+  - topology
+model_components:
+  depends:
+  - misc.networkx
+  - base_objects
+  - generic_vm_objects
+  - linux.ubuntu2204
+  precedes: []
+name: tests.networkx
+plugin: plugin.py

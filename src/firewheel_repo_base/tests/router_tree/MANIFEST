@@ -1,0 +1,12 @@
+name: tests.router_tree
+attributes:
+    depends:
+        - graph
+    provides:
+        - topology
+model_components:
+    depends:
+        - base_objects
+        - generic_vm_objects
+        - linux.base_objects
+plugin: plugin.py

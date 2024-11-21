@@ -1,0 +1,8 @@
+name: minimega.testbed_available
+attributes:
+    depends: []
+    provides:
+        - testbed_available
+model_components:
+    depends: []
+plugin: plugin.py

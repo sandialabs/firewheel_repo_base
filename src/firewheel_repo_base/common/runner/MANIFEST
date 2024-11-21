@@ -1,0 +1,9 @@
+name: common.runner
+attributes:
+    depends: []
+    provides: []
+model_components:
+    depends: []
+vm_resources:
+    - runner.py
+plugin: plugin.py

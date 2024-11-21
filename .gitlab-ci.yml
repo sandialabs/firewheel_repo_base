@@ -1,0 +1,138 @@
+###############################
+# FIREWHEEL's Continuous Integration
+#
+# This GitLab CI file enables testing of FIREWHEEL
+# on a variety of operating systems and versions of
+# Python.
+#
+# It makes heavy use of Anchors to save space.
+# see: https://docs.gitlab.com/ce/ci/yaml/README.html#anchors
+#
+###############################
+
+###############################
+# Change pip's cache directory to be inside the project
+# directory since we can only cache local items.
+###############################
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+
+###############################
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+###############################
+cache:
+  paths:
+    - .cache/pip
+    - fwpy/
+
+
+before_script:
+  - pushd /tmp
+  - python3.8 -m venv fwpy
+  - source fwpy/bin/activate
+  - popd
+  - python -m pip install $PIP_ARGS --upgrade wheel setuptools pip
+  - python -m pip install $PIP_ARGS pip --upgrade
+  - python -m pip install $PIP_ARGS tox
+
+
+###############################
+# Creating a few defaults and setting up the Pipeline stages.
+###############################
+default:
+  tags:
+    - ubuntu1804
+
+stages:
+  - lint
+  - deploy
+  - upstream
+
+###############################
+# Lint Stages
+#
+# This includes:
+# * lint-code: Linting all executable code
+# * lint-docs: Linting all documentation
+###############################
+lint-code:
+  stage: lint
+  script:
+    - tox -e lint
+
+lint-docs:
+  stage: lint
+  script:
+    - tox -e lint-docs
+
+# Trigger the full FIREWHEEL pipeline (and depend on the result)
+update-docs:
+  stage: upstream
+  trigger:
+    project: firewheel/firewheel
+    strategy: depend
+  only:
+    - main
+
+###############################
+# Deploy Stages
+#
+# This includes:
+# * build: Building the package wheel file
+###############################
+build:
+  stage: deploy
+  script:
+    - python -m pip install $PIP_ARGS twine build
+    - python -m build
+    - headerToken="JOB-TOKEN:"" $CI_JOB_TOKEN"
+    - rm -f packages_to_remove.txt
+    - nextLink="${CI_API_V4_URL}/projects/$CI_PROJECT_ID/packages?page=1&per_page=100&order_by=created_at&sort=asc"
+    # Query the Gitlab API to get a list of packages for the given project ID.
+    - response=$(curl --header "$headerToken" -si -w "\n%{http_code},%{size_header},%{size_download}" "$nextLink")
+    # Extract the HTTP code.
+    - httpCode=$(echo "$response" | sed -n '$ s/^\([0-9]*\),.*$/\1/ p')
+    - |-
+        if [ $httpCode != 200 ]; then
+          echo "Unable to list Gitlab packages, no cleanup can be done" && return 1;
+        fi
+    # Extract the response header size.
+    - headerSize=$(echo "$response" | sed -n '$ s/^[0-9]*,\([0-9]*\),.*$/\1/ p')
+    # Extract the response body size.
+    - bodySize=$(echo "$response" | sed -n '$ s/^.*,\([0-9]*\)$/\1/ p')
+    # Extract the response headers.
+    - headers="${response:0:${headerSize}}"
+    # Extract the response body.
+    - body="${response:${headerSize}:${bodySize}}"
+    - echo $body | python3 -c 'import sys, json; body=json.load(sys.stdin); item=[pkg["id"] for pkg in body if pkg["name"] == "firewheel-repo-base"]; print(item[0])' 2> /dev/null >> packages_to_remove.txt || true
+    # Loop over the list of packages to delete and remove each of them using Gitlab's API.
+    - |-
+        if [ -s packages_to_remove.txt ]; then
+          echo "$(cat packages_to_remove.txt | wc -l) packages will be removed."
+          cat packages_to_remove.txt | while read PACKAGE_ID
+          do
+            DELETION_STATUS=$(curl --request DELETE --header "$headerToken" "${CI_API_V4_URL}/projects/$CI_PROJECT_ID/packages/$PACKAGE_ID" -w '%{http_code}' -s)
+            if [ $DELETION_STATUS == 204 ]; then
+              echo "Package $PACKAGE_ID has been deleted successfully"
+            else
+              echo "/!\ Unable to delete package $PACKAGE_ID"
+            fi
+          done
+        else
+          echo "No package to delete"
+        fi
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  artifacts:
+    paths:
+      - dist/*.whl
+  needs: []
+  tags:
+    - ubuntu2204
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      allow_failure: true
