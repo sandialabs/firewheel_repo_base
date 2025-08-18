@@ -1,8 +1,8 @@
 import os
 import sys
+import json
 import math
 import pickle
-import pprint
 
 import netaddr
 from rich.console import Console
@@ -457,17 +457,15 @@ class Interfaces:
         Returns:
             str: A string representation of an :py:class:`base_objects.Interfaces`.
         """
-        ret = "[\n"
+        ret = []
         for interface in self.interfaces:
             new_int = dict(interface)
             new_int["address"] = str(new_int["address"])
             new_int["netmask"] = str(new_int["netmask"])
             new_int["network"] = str(new_int["network"])
             new_int["switch"] = new_int["switch"].name
-            ret += pprint.pformat(new_int)
-            ret += ",\n"
-        ret += "]"
-        return ret
+            ret.append(new_int)
+        return json.dumps(ret)
 
 
 class VMEndpoint:
