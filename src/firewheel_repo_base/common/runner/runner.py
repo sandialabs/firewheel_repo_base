@@ -91,7 +91,7 @@ class Runner(object):
             shell = True
 
         # Run the program
-        run = Popen(  # noqa: DUO116
+        run = Popen(
             arguments,
             stdout=PIPE,
             stderr=PIPE,

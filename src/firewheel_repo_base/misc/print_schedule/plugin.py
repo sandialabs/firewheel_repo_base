@@ -16,7 +16,10 @@ class PrintSchedule(AbstractPlugin):
     def _generate_schedule(self):
         """
         Get the ``vm_resource_schedule`` for all vertices in the graph and effectively
-        print the schedule attributes.
+        acquire the schedule attributes.
+
+        Returns:
+            dict: The sorted dictionary of schedule entries.
         """
 
         full_schedule = {}
