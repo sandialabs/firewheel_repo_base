@@ -1,0 +1,8 @@
+name: misc.print_schedule
+attributes:
+    depends:
+        - graph
+    provides: []
+model_components:
+    depends: []
+plugin: plugin.py
