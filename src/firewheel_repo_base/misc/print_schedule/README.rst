@@ -13,7 +13,7 @@ This MC can be placed in multiple locations of the experiment pipeline so that u
 
 .. warning::
 
-    To ensure that the complete schedule is output, this MC should be the **last** parameter to :ref:`helper_experiment`.
+    In cases where a complete schedule is the desired output, this MC must be the **last** parameter to :ref:`helper_experiment`.
     For example, ``firewheel experiment tests.vm_gen minimega.launch misc.print_schedule``
 
 **Attribute Depends:**
