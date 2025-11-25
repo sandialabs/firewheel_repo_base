@@ -2,7 +2,6 @@ name: misc.print_schedule
 attributes:
     depends:
         - graph
-        - schedules_ready
     provides: []
 model_components:
     depends: []

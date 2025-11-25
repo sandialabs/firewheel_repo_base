@@ -11,6 +11,11 @@ This output does **NOT** include associated VM resource scripts nor binary files
 
 This MC can be placed in multiple locations of the experiment pipeline so that users can see different views of how the experiment schedule is evolving.
 
+.. warning::
+
+    To ensure that the complete schedule is output, this MC should be the **last** parameter to :ref:`helper_experiment`.
+    For example, ``firewheel experiment tests.vm_gen minimega.launch misc.print_schedule``
+
 **Attribute Depends:**
     * ``graph``
 
