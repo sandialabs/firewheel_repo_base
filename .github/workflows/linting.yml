@@ -1,6 +1,6 @@
 # This workflow will enforce FIREWHEEL ecosystem standard linting
 
-name: FIREWHEEL Linting
+name: Lint
 
 on:
   push:
@@ -10,4 +10,8 @@ on:
 
 jobs:
   call-firewheel-linting:
-    uses: sandialabs/firewheel/.github/workflows/linting.yml@main
+    name: FIREHWEEL Linting
+    # Use the FIREWHEEL CI repo for both the workflow and its composite actions
+    uses: sandialabs/firewheel_ci/.github/workflows/linting.yml@main
+    with:
+      actions-ref: main

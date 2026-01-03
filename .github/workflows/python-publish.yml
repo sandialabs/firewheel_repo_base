@@ -1,14 +1,15 @@
 # This workflow will upload a Python package in the official FIREWHEEL ecosystem
 
-name: Upload FIREHWEEL Python Package
+name: Publish Python Package
 
 on:
   release:
     types: [published]
 
+jobs:
+  call-firewheel-publishing:
+    name: Publish FIREWHEEL Packages
+    uses: sandialabs/firewheel_ci/.github/workflows/python-publish.yml@main
+
 permissions:
   contents: read
-
-jobs:
-  call-firewheel-python-publish:
-    uses: sandialabs/firewheel/.github/workflows/python-publish.yml@main
