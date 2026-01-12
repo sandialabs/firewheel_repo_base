@@ -31,14 +31,18 @@ class PrintSchedule(AbstractPlugin):
 
             # Iterate over schedule
             for entry in vm_schedule.get_schedule():
-                full_schedule[entry.start_time] = full_schedule.get(entry.start_time, [])
-                full_schedule[entry.start_time].append({
-                    "name": vert.name,
-                    "executable": entry.executable,
-                    "arguments": entry.arguments,
-                    "data": entry.data,
-                    "pause": entry.pause,
-                })
+                full_schedule[entry.start_time] = full_schedule.get(
+                    entry.start_time, []
+                )
+                full_schedule[entry.start_time].append(
+                    {
+                        "name": vert.name,
+                        "executable": entry.executable,
+                        "arguments": entry.arguments,
+                        "data": entry.data,
+                        "pause": entry.pause,
+                    }
+                )
 
         return dict(sorted(full_schedule.items()))
 
