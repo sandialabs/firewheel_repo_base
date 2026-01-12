@@ -1162,6 +1162,9 @@ class VMEndpoint:
             for extra_file in extra_files:
                 mm_extra_files[extra_file] = vm_resource_store.get_file_path(extra_file)
 
+            if isinstance(arguments, str):
+                arguments = arguments.split()
+
             for argument in arguments:
                 if argument in mm_extra_files:
                     if isinstance(arguments, str):
