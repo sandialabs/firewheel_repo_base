@@ -41,6 +41,7 @@ class PrintSchedule(AbstractPlugin):
                         "arguments": entry.arguments,
                         "data": entry.data,
                         "pause": entry.pause,
+                        "on_host": entry.on_host,
                     }
                 )
 
