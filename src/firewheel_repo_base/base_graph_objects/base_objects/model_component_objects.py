@@ -1096,7 +1096,7 @@ class VMEndpoint:
 
             If a user has
             `recorded a VNC session <https://www.sandia.gov/minimega/module-34-recording-vnc/>`_
-            than can be useful to
+            then it can be useful to
             `replay <https://www.sandia.gov/minimega/module-35-vnc-playback-2/>`_
             the VNC session at a specific scheduled time during the experiment.
             First, the user should ensure that the recorded VNC session is included as a VM
