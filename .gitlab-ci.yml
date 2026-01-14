@@ -49,26 +49,9 @@ default:
     - ubuntu1804
 
 stages:
-  - lint
   - deploy
   - upstream
 
-###############################
-# Lint Stages
-#
-# This includes:
-# * lint-code: Linting all executable code
-# * lint-docs: Linting all documentation
-###############################
-lint-code:
-  stage: lint
-  script:
-    - tox -e lint
-
-lint-docs:
-  stage: lint
-  script:
-    - tox -e lint-docs
 
 # Trigger the full FIREWHEEL pipeline (and depend on the result)
 update-docs:
