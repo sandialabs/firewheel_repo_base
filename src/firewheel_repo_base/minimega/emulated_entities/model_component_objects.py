@@ -139,7 +139,7 @@ class MinimegaEmulatedVM:
             config (dict): The configuration for the VM.
 
         Raises:
-            RuntimeError: If a required configuration key is missing from an interface.
+            RuntimeError: If a required configuration key is missing from a drive.
 
         Returns:
             list: A list of drives for the VM.
@@ -153,6 +153,7 @@ class MinimegaEmulatedVM:
                 "file": drive["file"],
                 "path": os.path.join(self.vm["image_store"]["name"], drive["file"]),
                 "db_path": drive["db_path"],
+                "inject_partition": drive.get("inject_partition", None),
             }
 
             # Apply defaults.
@@ -177,6 +178,53 @@ class MinimegaEmulatedVM:
         config["aux"]["disks"] = config_list
         self.log.debug(
             'VM "%s" generated %s drive configs.', self.name, len(config_list)
+        )
+        return config_list
+
+    def _generate_disk_injections(self, config):
+        """Create a complete list of all disk injections for the VM.
+        There are two required properties: ``src`` and ``dst`` which
+        is the name of the file to inject and the destination location on the VM
+        respectively. There are two optional properties: ``description``, which can
+        describe the file being injected and ``permissions`` a string with a UNIX style
+        permissions (e.g., ``"0664"``).
+
+        Args:
+            config (dict): The configuration for the VM.
+
+        Raises:
+            RuntimeError: If a required configuration key is missing from an injection.
+
+        Returns:
+            list: A list of disk injections for the VM.
+        """
+        config_list = []
+
+        # Get required disk injection parameters
+        for inject in self.vm.get("injections", []):
+            try:
+                conf = {
+                    "src": inject["src"],
+                    "dst": inject["dst"],
+                }
+            except KeyError as exc:
+                raise RuntimeError(
+                    f'Missing "src" or "dst" on disk injection {inject} for VM "{self.name}".'
+                ) from exc
+
+            # Add optional disk injection options
+            keys = ["description", "permissions"]
+            for k in keys:
+                try:
+                    conf[k] = inject[k]
+                except KeyError:
+                    pass
+
+            config_list.append(conf)
+
+        config["aux"]["injections"] = config_list
+        self.log.debug(
+            'VM "%s" generated %s disk injection configs.', self.name, len(config_list)
         )
         return config_list
 
@@ -427,6 +475,7 @@ class MinimegaEmulatedVM:
         self._generate_nic_configs(config)
         self._generate_bios_config(config)
         self._generate_drive_configs(config)
+        self._generate_disk_injections(config)
         self._generate_vcpu_config(config)
         self._generate_mem_config(config)
         self._generate_vga_config(config)
