@@ -1,0 +1,17 @@
+name: Check Pull Request Title
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+jobs:
+  call-firewheel-pr-title-checker:
+    name: Validate FIREWHEEL PR title
+    uses: sandialabs/firewheel_ci/.github/workflows/pr-title-checker.yml@main
+
+permissions:
+  pull-requests: read
