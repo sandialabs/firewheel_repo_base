@@ -7,4 +7,9 @@ on:
 jobs:
   call-firewheel-update-changelog:
     name: Update Changelog (FIREWHEEL-style)
+    permissions:
+      contents: write
     uses: sandialabs/firewheel_ci/.github/workflows/update-changelog.yml@main
+
+permissions:
+  contents: read
