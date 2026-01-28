@@ -1,4 +1,4 @@
-name: Release Drafter
+name: Draft Release
 
 on:
   push:
@@ -15,6 +15,10 @@ on:
 jobs:
   call-firewheel-release-drafter:
     name: Update release notes (FIREWHEEL-style)
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
     uses: sandialabs/firewheel_ci/.github/workflows/release-drafter.yml@main
 
 permissions:
