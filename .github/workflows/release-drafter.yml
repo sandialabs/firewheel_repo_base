@@ -15,7 +15,11 @@ on:
 jobs:
   call-firewheel-release-drafter:
     name: Update release notes (FIREWHEEL-style)
-    uses: sandialabs/firewheel_ci/.github/workflows/release-drafter.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    uses: sandialabs/firewheel_ci/.github/workflows/release-drafter.yml@develop
 
 permissions:
   contents: read
