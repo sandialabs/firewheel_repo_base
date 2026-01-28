@@ -8,7 +8,7 @@ on:
 
 jobs:
   call-firewheel-publishing:
-    name: Publish FIREWHEEL Packages
+    name: Publish FIREWHEEL packages
     uses: sandialabs/firewheel_ci/.github/workflows/python-publish.yml@main
 
 permissions:

@@ -1,0 +1,10 @@
+name: Update Changelog
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  call-firewheel-update-changelog:
+    name: Update Changelog (FIREWHEEL-style)
+    uses: sandialabs/firewheel_ci/.github/workflows/update-changelog.yml@main
