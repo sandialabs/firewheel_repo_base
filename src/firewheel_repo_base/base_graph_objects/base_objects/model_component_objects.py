@@ -212,13 +212,13 @@ class Switch:
                 :py:class:`Vertex <firewheel.control.experiment_graph.Vertex>` creation.
 
         Raises:
-            NameError: If the switch doesn't have a name.
+            RuntimeError: If the switch doesn't have a name.
         """
         self.type = "switch"
 
         self.name = getattr(self, "name", name)
         if self.name is None:
-            raise NameError("Name must be specified for switch!")
+            raise RuntimeError("Name must be specified for switch!")
 
 
 class VmResourceSchedule:
@@ -536,7 +536,7 @@ class VMEndpoint:
         """
         self.name = getattr(self, "name", name)
         if self.name is None:
-            raise NameError("VMEndpoint must have a name!")
+            raise RuntimeError("VMEndpoint must have a name!")
 
         if "_" in self.name or " " in self.name or "," in self.name:
             raise ValueError(
