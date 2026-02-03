@@ -33,20 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Full Changelog**: https://github.com/sandialabs/firewheel_repo_base/compare/v2.7.0...v2.8.0
 
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
 ## [2.7.0] - 2024-11-24
 
 This is the initial Open Source release of `firewheel_repo_base`!
