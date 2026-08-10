@@ -59,8 +59,8 @@ class PrintGraph(AbstractPlugin):
                     {
                         "module": module_name,
                         "name": object_name,
-                        "fullName": f"{module_name}.{object_name}"
-                     }
+                        "fullName": f"{module_name}.{object_name}",
+                    }
                 )
 
             dec_obj = json.dumps(component_classes)
