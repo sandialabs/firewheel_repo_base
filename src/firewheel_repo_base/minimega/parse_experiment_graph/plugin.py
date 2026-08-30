@@ -161,6 +161,82 @@ class Plugin(AbstractPlugin):
         mm_endpoint = self.discovery_api.update_endpoint(mm_node_properties=mm_endpoint)
         return mm_endpoint
 
+    def _ensure_kvm_virtualization_enabled(self):
+        """Ensure that KVM virtualization is enabled. Without it, minimega will
+        not be able to launch VMs. This function checks
+        ``/sys/module/kvm_intel/parameters/nested`` and
+        ``/sys/module/kvm_amd/parameters/nested`` to see if it can successfully
+        determine that virtualization is enabled. If that check is inconclusive
+        (i.e. those files do not exist) it attempts to use the
+        ``virst-host-validate`` program to make the determination.
+
+        Raises:
+            RuntimeError: If KVM virtualization is not enabled
+        """
+        exception_msg = "KVM Virtualization not enabled. Enable in BIOS to launch VMs with minimega"
+        not_found_msg = "not found when checking for KVM virtualization, continuing check with another method"
+
+        # First, check kvm parameters files
+        kvm_params_files = [f"/sys/module/kvm_{arch}/parameters/nested" for arch in ["intel", "amd"]]
+        for kvm_params_file in kvm_params_files:
+            try:
+                with open(kvm_params_file, "r") as params_file:
+                    params = params_file.read()
+            except FileNotFoundError:
+                self.log.debug(f"File {kvm_params_file} {not_found_msg}")
+                continue
+            params = params.strip()
+            if params == "Y":
+                return
+            else:
+                raise RuntimeError(exception_msg)
+
+        # If previous check was inconclusive, try using the `virt-host-validate` command
+        output_set = False
+        try:
+            virt_host_validate = "virt-host-validate"
+            output = subprocess.check_output([virt_host_validate], stderr=subprocess.STDOUT)
+            output_set = True
+        except FileNotFoundError:
+            self.log.debug(f"Command {virt_host_validate} {not_found_msg}")
+        except subprocess.CalledProcessError as exc:
+            # virt-host-validate may return a non-zero exit code, but we only
+            # need to check a few fields, so that could still be okay. Ignore
+            # this error.
+            output = exc.output
+            output_set = True
+
+        if output_set:
+            output = output.decode("utf-8")
+            lines = output.split("\n")
+            fields_to_check = [
+                ["Checking for hardware virtualization", False],
+                ["Checking if device /dev/kvm exists", False],
+                ["Checking if device /dev/vhost-net exists", False],
+                ["Checking if device /dev/net/tun exists", False]
+            ]
+            for line in lines:
+                try:
+                    prgm, msg, result = line.split(":")
+                except ValueError:
+                    continue
+                msg = msg.strip()
+                result = result.strip()
+                for i in range(len(fields_to_check)):
+                    field = fields_to_check[i][0]
+                    if msg == field:
+                        fields_to_check[i][1] = result == "PASS"
+
+            if all([field[1] for field in fields_to_check]):
+                return
+            else:
+                # If any of the checks failed, raise the Exception
+                raise RuntimeError(exception_msg)
+
+        self.log.debug(f"Could not verify that KVM virtualization was enabled")
+        raise RuntimeError(exception_msg)
+
+
     def run(self):
         """This method contains the primary logic to launch an experiment.
         It has several objectives:
@@ -249,6 +325,7 @@ class Plugin(AbstractPlugin):
             ]
         )
         self.log.debug("minemiter_ret=%s", minemiter_ret)
+        self._ensure_kvm_virtualization_enabled()
         # Note that this uses the FIREWHEEL configuration to launch a new process
         # if there are not access controls on this file or the user accounts there
         # could be security concerns.
