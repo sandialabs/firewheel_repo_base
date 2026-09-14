@@ -965,7 +965,7 @@ class VMEndpoint:
 
         Returns:
             base_objects.FileTransferScheduleEntry: The newly created schedule entry.
-        """  # ruff: ignore[line-too-long, doc-line-too-long]
+        """  # noqa: E501,W505
         transfer_vm_resource = FileTransferScheduleEntry(
             location, interval, start_time, destination
         )
@@ -996,7 +996,7 @@ class VMEndpoint:
 
         Returns:
             base_objects.FileTransferScheduleEntry: The newly created schedule entry.
-        """  # ruff: ignore[line-too-long, doc-line-too-long]
+        """  # noqa: E501,W505
         # An interval of None indicates that no looping should happen
         # and therefore the file only gets pulled once
         transfer_vm_resource = FileTransferScheduleEntry(
@@ -1315,15 +1315,14 @@ class VMEndpoint:
             control_network (bool): Is this connection to the control network.
                 Defaults to :py:data:`False`.
 
+        Raises:
+            TypeError: If the switch is not of type :py:class:`base_objects.Switch`.
+
         Returns:
             tuple(str, firewheel.control.experiment_graph.Edge): A tuple containing the name
             of the newly created VM interface and the
             :py:class:`Edge <firewheel.control.experiment_graph.Edge>` which connects the VM to
             a :py:class:`Switch <base_objects.Switch>`.
-
-        Raises:
-            TypeError: If the switch is not of type :py:class:`base_objects.Switch`.
-
         """
         if not switch.is_decorated_by(Switch):
             raise TypeError("switch parameter must be (decorated by) a Switch.")
@@ -1366,15 +1365,14 @@ class VMEndpoint:
             mac (str, optional): A specific MAC address for the interface.
                 Defaults to :py:data:`None`.
 
+        Raises:
+            TypeError: If the switch is not of type :py:class:`base_objects.Switch`.
+
         Returns:
             tuple(str, firewheel.control.experiment_graph.Edge): A tuple containing the name of the
             newly created VM interface and the
             :py:class:`Edge <firewheel.control.experiment_graph.Edge>` which connects the VM to
             a :py:class:`Switch <base_objects.Switch>`.
-
-        Raises:
-            TypeError: If the switch is not of type :py:class:`base_objects.Switch`.
-
         """
         if not switch.is_decorated_by(Switch):
             raise TypeError("switch parameter must be (decorated by) a Switch.")
@@ -1393,7 +1391,7 @@ class VMEndpoint:
             interface["mac"] = mac
 
         edge = Edge(self, switch)
-        edge.dst_ip = "0.0.0.0"  # ruff: ignore[hardcoded-bind-all-interfaces]
+        edge.dst_ip = "0.0.0.0"  # noqa: S104
 
         return (interface, edge)
 
@@ -1633,7 +1631,7 @@ class FileTransferScheduleEntry(ScheduleEntry):
                 files will be written to ``<logging.root_dir>/transfers/``. See
                 :py:meth:`_transfer_data <firewheel.vm_resource_manager.vm_resource_handler.VMResourceHandler._transfer_data>`
                 for more details.
-        """  # ruff: ignore[line-too-long, doc-line-too-long]
+        """  # noqa: E501,W505
         super().__init__(start_time)
         self.add_file_transfer(in_vm_location, interval, out_host_destination)
 

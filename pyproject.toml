@@ -101,38 +101,37 @@ select = [
 
 # We may want to adhere to D205 and D415 in the future.
 ignore = [
-    "undocumented-public-module",
-    "undocumented-magic-method",
-    "undocumented-public-package",
-    "unnecessary-multiline-docstring",
-    "blank-line-after-function",
-    "missing-blank-line-after-summary",
-    "multi-line-summary-first-line",
-    "missing-terminal-punctuation",
-    "assert",
-    "suspicious-pickle-import",
-    "suspicious-pickle-usage",
-    "subprocess-without-shell-equals-true",
-    "suspicious-subprocess-import",
-    "suspicious-non-cryptographic-random-usage",
-    "hardcoded-sql-expression",     # Ignore warning about possible SQL injection. SQL is not used in FIREWHEEL.
-    "redefined-loop-name",
-    "unused-noqa",
-    "mutable-class-default",
-    "too-many-public-methods",
-    "too-many-return-statements",
-    "too-many-branches",
-    "too-many-arguments",
-    "too-many-locals",
-    "too-many-statements",
-    "too-many-nested-blocks",
-    "too-many-positional-arguments",
-    "magic-value-comparison",
-    "no-self-use",
-    "docstring-extraneous-exception",   # Has lots of false positives currently
-    "try-except-in-loop",
-    "manual-list-comprehension",
-    "too-many-statements-in-try-clause",
+    "D100",     # Missing docstring in public module
+    "D105",     # Missing docstring in magic method
+    "D104",     # Missing docstring in public package
+    "D200",     # One-line docstring should fit on one line with quotes
+    "D202",     # No blank lines allowed after function docstring
+    "D205",     # 1 blank line required between summary line and description
+    "D212",     # Multi-line docstring summary should start at the first line
+    "D415",     # First line should end with a period, question mark, or exclamation point
+    "S101",     # Ignore assert statements
+    "S403",     # Ignore warnings about importing pickle
+    "S301",     # suspicious-pickle-usage
+    "S603",     # subprocess-without-shell-equals-true
+    "S404",     # Ignore warnings about importing subprocess
+    "S311",     # Ignore warnings about using random
+    "S608",     # Ignore warning about possible SQL injection. SQL is not used in FIREWHEEL.
+    "PLW2901",  # redefined-loop-name
+    "RUF100",   # unused-noqa
+    "RUF012",   # mutable-class-default
+    "PLR0904",  # too-many-public-methods
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0913",  # too-many-arguments
+    "PLR0914",  # too-many-locals
+    "PLR0915",  # too-many-statements
+    "PLR1702",  # too-many-nested-blocks
+    "PLR0917",  # too-many-positional-arguments
+    "PLR2004",  # magic-value-comparison
+    "PLR6301",  # no-self-use
+    "DOC502",   # docstring-extraneous-exception -- Has lots of false positives currently
+    "PERF203",  # try-except-in-loop
+    "PERF401",  # manual-list-comprehension
 ]
 preview = true
 # Allow fix for all enabled rules (when `--fix`) is provided.
