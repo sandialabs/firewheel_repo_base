@@ -32,12 +32,12 @@ class Plugin(AbstractPlugin):
             vme_conf (dict): The generated minimega configuration dictionary created by
                 :ref:`minimega.emulated_entities_mc`.
 
+        Returns:
+            dict: The newly created endpoint in the discovery graph.
+
         Raises:
             RuntimeError: If minimega tags are used and a tag name conflicts with
                 a required configuration key.
-
-        Returns:
-            dict: The newly created endpoint in the discovery graph.
         """
         data = {}
         data["architecture"] = vme_conf["vm"]["architecture"]
@@ -49,7 +49,6 @@ class Plugin(AbstractPlugin):
             # A control IP is not necessary
             data["control_ip"] = ""
 
-        data["type"] = "qemu"
         data["cpu_model"] = "host"
         data["memory"] = vme_conf["vm"]["memory"]
 
@@ -63,19 +62,60 @@ class Plugin(AbstractPlugin):
         )
         data["vcpus"] = str(vcpus)
 
-        data["vga_model"] = vme_conf["vm"]["vga_model"]
+        vm_type = vme_conf["vm"]["type"]
 
-        # NOTE: we assume the first disk is the image
-        data["image"] = vme_conf["aux"]["disks"][0]["file"]
-        disk_strs = []
-        for drive in vme_conf["aux"]["disks"]:
-            disk_str = ",".join([drive["path"], drive["interface"], drive["cache"]])
-            disk_strs.append(disk_str)
-        data["disks"] = " ".join(disk_strs)
+        if vm_type == "android":
+            data["type"] = "android"
 
-        # Currently, there is only support for a num_serial option
-        # we need one for the qga socket
-        data["virtio_ports"] = "org.qemu.guest_agent.0"
+            android_config = vme_conf["aux"].get("android_config", {})
+
+            if vme_conf["vm"].get("image"):
+                data["image"] = vme_conf["vm"]["image"]
+
+            android_key_map = {
+                "android-sdk": "android_sdk",
+                "android-emulator": "android_emulator",
+                "android-adb": "android_adb",
+                "android-avd": "android_avd",
+                "android-avd-dir": "android_avd_dir",
+                "android-no-window": "android_no_window",
+                "android-console-base-port": "android_console_base_port",
+                "android-extra-args": "android_extra_args",
+                "android-writable-system": "android_writable_system",
+            }
+
+            for src_key, dst_key in android_key_map.items():
+                if src_key not in android_config:
+                    continue
+
+                value = android_config[src_key]
+
+                # Convert booleans to strings because a Go template boolean false
+                # is falsey and would not emit. The string "false" is non-empty.
+                if isinstance(value, bool):
+                    value = str(value).lower()
+                elif isinstance(value, list):
+                    value = " ".join(map(str, value))
+                else:
+                    value = str(value)
+
+                data[dst_key] = value
+
+        else:
+            data["type"] = "qemu"
+            data["cpu_model"] = "host"
+            data["vga_model"] = vme_conf["vm"]["vga_model"]
+
+            # NOTE: we assume the first disk is the image
+            data["image"] = vme_conf["aux"]["disks"][0]["file"]
+
+            disk_strs = []
+            for drive in vme_conf["aux"]["disks"]:
+                disk_str = ",".join([drive["path"], drive["interface"], drive["cache"]])
+                disk_strs.append(disk_str)
+            data["disks"] = " ".join(disk_strs)
+
+            data["virtio_ports"] = "org.qemu.guest_agent.0"
 
         # Get all the minimega tags
         for tag_key, tag_value in vme_conf["tags"].items():
@@ -87,7 +127,10 @@ class Plugin(AbstractPlugin):
             data[tag_key] = tag_value
 
         # Add any other QEMU options here.
-        data["qemu_append"] = vme_conf["aux"]["qemu_append_str"]
+        if vme_conf["aux"].get("qemu"):
+            data["qemu"] = vme_conf["aux"]["qemu"]
+        if vme_conf["aux"].get("qemu_append_str"):
+            data["qemu_append"] = vme_conf["aux"]["qemu_append_str"]
 
         # If there's any coscheduling parameters, propagate them
         data["coschedule"] = str(vme_conf["coschedule"])
@@ -161,6 +204,115 @@ class Plugin(AbstractPlugin):
         mm_endpoint = self.discovery_api.update_endpoint(mm_node_properties=mm_endpoint)
         return mm_endpoint
 
+    def update_android_adb_config(self, process_config, core_vms):
+        """
+        Update Android VM Resource Handler ADB config using actual minimega launch info.
+
+        Args:
+            process_config (dict): The complete configuration for starting an ADB-based VM
+                Resource Handler.
+            core_vms (dict): The list of VMs started in the experiment.
+
+        Raises:
+            RuntimeError: If minimega did not report required Android ADB fields.
+            ValueError: If minimega reported malformed port values.
+        """
+        vm_name = process_config["vm_name"]
+
+        try:
+            mm_vm = core_vms[vm_name]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"Unable to update Android ADB config for {vm_name}: "
+                "VM not found in minimega VM map."
+            ) from exc
+
+        def require_field(field):
+            value = mm_vm.get(field)
+            if value in {None, "", "N/A"}:
+                raise RuntimeError(
+                    f"Unable to update Android ADB config for {vm_name}: "
+                    f"minimega did not report required field {field!r}. "
+                    f"Available VM data: {mm_vm}"
+                )
+            return value
+
+        def require_port(field):
+            value = require_field(field)
+            try:
+                return int(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Unable to update Android ADB config for {vm_name}: "
+                    f"minimega reported malformed {field}={value!r}."
+                ) from exc
+
+        def optional_port(value):
+            if value in {None, "", "N/A"}:
+                return None
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                self.log.warning(
+                    "Ignoring malformed pre-launch Android port hint for VM %s: %r",
+                    vm_name,
+                    value,
+                )
+                return None
+
+        requested_serial = process_config.get("adb_serial")
+        requested_console_port = optional_port(
+            process_config.get("android_console_port")
+        )
+        requested_adb_port = optional_port(process_config.get("android_adb_port"))
+
+        actual_serial = require_field("android_serial")
+        actual_console_port = require_port("android_console_port")
+        actual_adb_port = require_port("android_adb_port")
+
+        changed_fields = []
+
+        if requested_serial is not None and requested_serial != actual_serial:
+            changed_fields.append(
+                f"adb_serial requested/hinted={requested_serial!r} actual={actual_serial!r}"
+            )
+
+        if (
+            requested_console_port is not None
+            and requested_console_port != actual_console_port
+        ):
+            changed_fields.append(
+                "android_console_port "
+                f"requested/hinted={requested_console_port!r} actual={actual_console_port!r}"
+            )
+
+        if requested_adb_port is not None and requested_adb_port != actual_adb_port:
+            changed_fields.append(
+                "android_adb_port "
+                f"requested/hinted={requested_adb_port!r} actual={actual_adb_port!r}"
+            )
+
+        if changed_fields:
+            self.log.warning(
+                "minimega assigned Android ADB connection details for VM %s that "
+                "differ from pre-launch hints: %s",
+                vm_name,
+                "; ".join(changed_fields),
+            )
+
+        process_config["adb_serial"] = actual_serial
+        process_config["android_console_port"] = actual_console_port
+        process_config["android_adb_port"] = actual_adb_port
+
+        self.log.info(
+            "Using Android ADB connection for VM %s: adb_serial=%s, "
+            "android_console_port=%s, android_adb_port=%s",
+            vm_name,
+            actual_serial,
+            actual_console_port,
+            actual_adb_port,
+        )
+
     def run(self):
         """This method contains the primary logic to launch an experiment.
         It has several objectives:
@@ -173,6 +325,9 @@ class Plugin(AbstractPlugin):
         #. Have minimega read the output to launch the VMs.
         #. Finish setting up the control network (if any exists).
         #. Launch a :ref:`vm-resource-handler` for each VM using minimega to start the process.
+
+        Raises:
+            RuntimeError: If one or more VMs entered the ``ERROR`` state during minimega launch
         """
         self.discovery_api = discoveryAPI()
         switch_names = set()
@@ -284,16 +439,30 @@ class Plugin(AbstractPlugin):
             # Unknown errors could be returned from minimega
             # so catch all possibilities.
             except Exception:
-                self.log.debug(
+                self.log.exception(
                     "Iteration num=%s. Waiting for vm configs from minimega: exception",
                     i,
                 )
-                self.log.exception()
                 continue
             if all_vms_launched:
                 break
 
         assert all_vms_launched
+
+        errored_vms = {
+            name: vm for name, vm in core_vms.items() if vm.get("state") == "ERROR"
+        }
+
+        if errored_vms:
+            details = []
+            for name, vm in errored_vms.items():
+                error_msg = vm.get("error", "")
+                details.append(f"{name}: {error_msg or vm}")
+
+            raise RuntimeError(
+                "One or more VMs entered ERROR state during minimega launch: "
+                + "; ".join(details)
+            )
 
         # If there is a control_net, tap it
         if self.control_net:
@@ -322,7 +491,10 @@ class Plugin(AbstractPlugin):
             # Run the VM Resource Handler with the correct python path
             binary_name = sys.executable
             handler_path = process_config["binary_name"]
-            update_socket_path(process_config)
+            if process_config.get("engine") == "QemuVM":
+                update_socket_path(process_config)
+            elif process_config.get("engine") == "ADB":
+                self.update_android_adb_config(process_config, core_vms)
             handler_args = json.dumps(process_config, separators=(",", ":"))
             if mm_api.cluster_head_node == hostname:
                 # need to escape once on local commands
