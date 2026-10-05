@@ -26,7 +26,7 @@ class SendMiniwebArp(AbstractPlugin):
         for vertex in self.g.get_vertices():
             if vertex.is_decorated_by(VMEndpoint):
                 try:
-                    args = "-w 1 192.0.2.1 > NULL"
+                    args = "-w 1 192.0.2.1 > NULL || true"
                     vertex.run_executable(-1, "ping", arguments=args)
                 except AttributeError:
                     pass
