@@ -50,7 +50,7 @@ class Plugin(AbstractPlugin):
             if v.is_decorated_by(VMEndpoint):
                 if v.is_decorated_by(AbstractWindowsEndpoint):
                     location_dir = f"C:{location_dir}"
-                v.run_executable(-50, "mkdir", arguments=["p", location_dir])
+                v.run_executable(-50, "mkdir", arguments=["-p", location_dir])
                 location = os.path.join(location_dir, filename)
                 v.drop_file(-1, location, filename, preload=preload)
                 v.run_executable(

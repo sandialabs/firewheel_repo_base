@@ -1,3 +1,4 @@
+import json
 import inspect
 from pathlib import Path
 
@@ -49,6 +50,20 @@ class PrintGraph(AbstractPlugin):
         print_graph = nx.Graph()
         for v in self.g.get_vertices():
             # Get decorators
+            component_classes = []
+            for dec in v.decorators:
+                module_name = str(dec.__module__)
+                object_name = str(dec.__name__)
+
+                component_classes.append(
+                    {
+                        "module": module_name,
+                        "name": object_name,
+                        "fullName": f"{module_name}.{object_name}",
+                    }
+                )
+
+            dec_obj = json.dumps(component_classes)
             dec_names = ", ".join([str(dec.__name__) for dec in v.decorators])
 
             # Get attributes
@@ -92,6 +107,7 @@ class PrintGraph(AbstractPlugin):
                 v.name,
                 graph_id=v.graph_id,
                 decorated_by=dec_names,
+                decorators=dec_obj,
                 **attrs,
                 **node_char,
             )
