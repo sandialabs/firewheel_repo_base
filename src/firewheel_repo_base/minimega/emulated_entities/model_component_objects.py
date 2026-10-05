@@ -138,11 +138,12 @@ class MinimegaEmulatedVM:
         Args:
             config (dict): The configuration for the VM.
 
+        Returns:
+            list: A list of drives for the VM.
+
         Raises:
             RuntimeError: If a required configuration key is missing from a drive.
 
-        Returns:
-            list: A list of drives for the VM.
         """
         config_list = []
 
@@ -326,39 +327,75 @@ class MinimegaEmulatedVM:
         config["vm"]["vga_model"] = self.vm["vga"]
 
     def _generate_vm_resource_handler_communication_config(self, config, minimega_type):
-        """Create the finished configuration which will be used to enable communication
-        between the :ref:`vm-resource-handler` and the VM.
+        """Create the configuration used by the :ref:`vm-resource-handler` to communicate
+        with the VM.
 
         Args:
             config (dict): The configuration for the VM.
-            minimega_type (str): The type of the VM. Currently, there is only one type ``QemuVM``.
+            minimega_type (str): The VM type, e.g. ``QemuVM`` or ``android``.
 
         Returns:
-            dict: The ``qga_config`` dictionary.
+            dict: Driver communication configuration.
         """
-        # First check that the VM needs resource handler communication
         try:
             if not self.vm_resource_schedule:
                 return {}
         except AttributeError:
             return {}
 
-        # Handle vm_resource communication devices based off VM type
         if minimega_type == "QemuVM":
+            virtio_serial_path = os.path.join(
+                fw_config["minimega"]["base_dir"],
+                "namespaces",
+                fw_config["minimega"]["namespace"],
+                self.uuid,
+                "virtio-serial0",
+            )
+
             qga_config = {
                 "name": "serial",
                 "id": "minimegaqga",
-                "path": os.path.join(
-                    fw_config["minimega"]["base_dir"],
-                    "namespaces",
-                    fw_config["minimega"]["namespace"],
-                    self.uuid,
-                    "virtio-serial0",
-                ),
+                "path": virtio_serial_path,
             }
+
             self.log.debug("new qga path is %s", qga_config["path"])
             config["aux"]["qga_config"] = qga_config
             return qga_config
+
+        if minimega_type == "android":
+            adb_options = self.vm.get("adb", {})
+            android_options = self.vm.get("android", {})
+
+            android_console_port = adb_options.get(
+                "android_console_port",
+                android_options.get("android-console-base-port"),
+            )
+
+            if android_console_port in {0, "0", ""}:
+                android_console_port = None
+
+            adb_config = {
+                "require_root": adb_options.get("require_root", True),
+            }
+
+            # Optional pre-launch hint. This will be overwritten after
+            # minimega launch's the VM using the actual `android_serial``.
+            if adb_options.get("adb_serial"):
+                adb_config["adb_serial"] = adb_options["adb_serial"]
+
+            # Optional requested/hinted console port. This will be overwritten after
+            # minimega launch's the VM using the actual ``android_console_port``.
+            if android_console_port is not None:
+                adb_config["android_console_port"] = android_console_port
+
+            # Optional; This is typically `android_console_port` + 1 but is
+            # normally unknown/unset until after minimega launch.
+            if "android_adb_port" in adb_options:
+                adb_config["android_adb_port"] = adb_options["android_adb_port"]
+
+            config["aux"]["adb_config"] = adb_config
+            return adb_config
+
         return {}
 
     def _generate_vm_resource_handler_process_config(self, config):
@@ -371,7 +408,8 @@ class MinimegaEmulatedVM:
             config (dict): The configuration for the VM.
 
         Returns:
-            dict: The configuration to launch a new :ref:`vm-resource-handler` process.
+            dict: The configuration to launch a new a new :ref:`vm-resource-handler` process,
+            or None if no handler should be launched.
         """
         try:
             if not self.vm_resource_schedule:
@@ -381,19 +419,48 @@ class MinimegaEmulatedVM:
 
         process_config = {
             "type": "Process",
-            "engine": config["vm"]["type"],
             "uuid": str(uuid.uuid4()),
             "vm_name": config["vm"]["name"],
             "vm_uuid": config["vm"]["uuid"],
             "binary_name": firewheel.vm_resource_manager.vm_resource_handler.__file__,
         }
 
-        if config["vm"]["type"] == "QemuVM":
-            if "qga_config" in config["aux"] and config["aux"]["qga_config"]:
-                process_config["path"] = config["aux"]["qga_config"]["path"]
+        driver_type = config["vm"]["type"]
 
-            if "path" not in process_config:
+        if driver_type == "QemuVM":
+            qga_config = config["aux"].get("qga_config")
+            if not qga_config:
                 return None
+
+            process_config["engine"] = "QemuVM"
+            process_config["path"] = qga_config["path"]
+
+        elif driver_type == "android":
+            adb_config = config["aux"].get("adb_config")
+            if not adb_config:
+                return None
+
+            process_config["engine"] = "ADB"
+            process_config["vm_type"] = "android"
+            process_config["require_root"] = adb_config.get("require_root", True)
+
+            if "adb_serial" in adb_config:
+                process_config["adb_serial"] = adb_config["adb_serial"]
+
+            if "android_console_port" in adb_config:
+                process_config["android_console_port"] = adb_config[
+                    "android_console_port"
+                ]
+
+            if "android_adb_port" in adb_config:
+                process_config["android_adb_port"] = adb_config["android_adb_port"]
+        else:
+            self.log.debug(
+                'VM "%s" has unsupported VM Resource Handler driver type "%s".',
+                config["vm"]["name"],
+                driver_type,
+            )
+            return None
 
         config["aux"]["handler_process"] = process_config
         return process_config
@@ -435,19 +502,23 @@ class MinimegaEmulatedVM:
         """Generate a minimega VM config based on this
         :py:class:`Vertex <firewheel.control.experiment_graph.Vertex>`.
 
-        Raises:
-            KeyError: Every VM must define an architecture.
-
         Returns:
             dict: The minimega configuration dictionary with all required information.
+
+        Raises:
+            KeyError: Every VM must define an architecture.
         """
 
         config = {}
         config["aux"] = {}
+        config["aux"]["qemu"] = self.vm.get("qemu")
         config["aux"]["qemu_append"] = self.vm.get("qemu_append", {})
         config["vm"] = {}
         config["vm"]["uuid"] = self.uuid
-        config["vm"]["type"] = "QemuVM"
+        config["vm"]["type"] = self.vm.get("vm_type", "QemuVM")
+        is_android = config["vm"]["type"] == "android"
+        config["aux"]["android_config"] = self.vm.get("android", {})
+
         config["coschedule"] = self.coschedule
         self.log.debug('VM "%s" has UUID %s.', self.name, self.uuid)
 
@@ -465,7 +536,12 @@ class MinimegaEmulatedVM:
             self.log.critical("VM %s must define an architecture.", self.name)
             raise
         config["vm"]["name"] = self.name
-        config["vm"]["image"] = self.vm["image"]
+
+        if is_android:
+            config["vm"]["image"] = self.vm.get("image", "")
+            config["aux"]["disks"] = []
+        else:
+            config["vm"]["image"] = self.vm["image"]
 
         if "initial_power_state" in self.vm:
             config["aux"]["power_state"] = self.vm["initial_power_state"]
@@ -473,12 +549,16 @@ class MinimegaEmulatedVM:
             config["aux"]["power_state"] = "running"
 
         self._generate_nic_configs(config)
-        self._generate_bios_config(config)
-        self._generate_drive_configs(config)
-        self._generate_disk_injections(config)
+        if not is_android:
+            self._generate_bios_config(config)
+            self._generate_drive_configs(config)
+            self._generate_vga_config(config)
+            self._generate_disk_injections(config)
+        else:
+            config["vm"]["vga_model"] = self.vm.get("vga", "")
+
         self._generate_vcpu_config(config)
         self._generate_mem_config(config)
-        self._generate_vga_config(config)
         self._generate_qemu_append_str(config)
         self._generate_vm_resource_handler_communication_config(
             config, config["vm"]["type"]
@@ -511,7 +591,7 @@ class MinimegaEmulatedVM:
         except AttributeError:
             config["tags"] = {}
 
-        if config["aux"]["qga_config"]:
+        if config["aux"].get("qga_config") or config["aux"].get("adb_config"):
             self._generate_vm_resource_handler_process_config(config)
 
         return config

@@ -9,6 +9,7 @@ from rich.console import Console
 
 from firewheel.control.experiment_graph import Edge
 from firewheel.vm_resource_manager.schedule_entry import ScheduleEntry
+from firewheel.vm_resource_manager.vm_resource_store import VmResourceStore
 
 
 class AbstractWindowsEndpoint:
@@ -1057,6 +1058,131 @@ class VMEndpoint:
         self.vm_resource_schedule.add_vm_resource(pause_vm_resource)
         return pause_vm_resource
 
+    def run_host_mm_command(self, start_time, arguments=None, extra_files=None):
+        """
+        This method allows a user to schedule a minimega command to impact the given VM
+        (or the entire experiment) at the specified time.
+        This command passes the arguments directly to ``minimega -e``.
+        Any files that need to be present on the host when the command is run
+        **MUST** be specified via the ``extra_files`` parameter.
+        This method adds a :py:class:`base_objects.RunHostExecutableScheduleEntry` object to a
+        :py:class:`Vertex's <firewheel.control.experiment_graph.Vertex>`
+        :py:class:`base_objects.VmResourceSchedule`.
+
+        Warning:
+            Because this provides direct access to minimega commands, it is possible to impact
+            the entire experiment if the command being run is not scoped to the VM.
+            Be very careful when using this method to avoid unintended consequences!
+
+        Args:
+            start_time (int): The schedule time (positive or negative) of when to execute
+                the minimega command. (See :ref:`start-time` for more details).
+            arguments (str or list): This field allows a user to provide
+                arguments for minimega either aa single string or a list of strings.
+                These get passed to ``minimega -e`` on the physical host which has launched this
+                specific VM. Defaults to :py:data:`None`.
+            extra_files (list, optional): A list of extra files that need to be available on the
+                physical host when the minimega command is run.
+                This is useful for commands that require additional files to be present on the host.
+
+        Returns:
+            base_objects.RunHostExecutableScheduleEntry: The newly created schedule entry.
+
+        Raises:
+            ValueError: If no arguments are provided.
+
+        Examples:
+            **VNC Replay Example**
+
+            If a user has
+            `recorded a VNC session <https://www.sandia.gov/minimega/module-34-recording-vnc/>`_
+            then it can be useful to
+            `replay <https://www.sandia.gov/minimega/module-35-vnc-playback-2/>`_
+            the VNC session at a specific scheduled time during the experiment.
+            First, the user should ensure that the recorded VNC session is included as a VM
+            resource to the model component and must be provided to the ``extra_files`` parameter.
+            In this example, assume our session is called `open-browser.vnc`.
+            Then, the user would pass in the correct minimega syntax for replaying the recorded
+            session (i.e., ``vnc play server-0 open-browser.vnc``).
+
+            .. code-block:: python
+
+                host = Vertex(self.g, "host")
+                host.decorate(Ubuntu2204Desktop)
+                host.run_host_mm_command(
+                    10,
+                    arguments=["vnc", "play", host.name, "open-browser.vnc"],
+                    extra_files=["open-browser.vnc"]
+                )
+
+
+            **Hotplugging USB Drive Example**
+
+            Minimega can also dynamically
+            `hotplug (or unplug) USB devices <https://www.sandia.gov/minimega/module-17-hotplugging-usb-drives/>`_.
+            The desired USB drive must be available as a VM resource during the experiment
+            and must be provided to the ``extra_files`` parameter.
+            That way we can ensure that it is available on each physical host.
+            In this example, assume we have a USB drive image called ``mydrive.img``
+            that was created as follows:
+
+            .. code-block:: bash
+
+                # dd if=/dev/zero of=mydrive.img bs=1M count=1024
+                # mkfs.fat mydrive.img
+                # mkdir -p /tmp/mydrive
+                # mount mydrive.img /tmp/mydrive
+                # echo "This is a test" > /tmp/mydrive/test.txt
+                # umount /tmp/mydrive
+
+            Then you can use the associated minimega syntax to following parameters to hotplug
+            the drive at a specific time:
+
+            .. code-block:: python
+
+                host = Vertex(self.g, "host")
+                host.decorate(LinuxHost)
+                host.run_host_mm_command(
+                    -100,
+                    arguments=["vm", "hotplug", "add", host.name, "mydrive.img", "2.0"],
+                    extra_files=["mydrive.img"]
+                )
+
+        """
+        vm_resource_store = VmResourceStore()
+
+        if not arguments:
+            raise ValueError("Arguments must be provided to run_host_mm_command()")
+
+        program = "minimega"
+
+        # Now we need to get the correct file paths for any extra files
+        if extra_files:
+            mm_extra_files = {}
+            for extra_file in extra_files:
+                mm_extra_files[extra_file] = vm_resource_store.get_file_path(extra_file)
+
+            if isinstance(arguments, str):
+                arguments = arguments.split()
+
+            for argument in arguments:
+                if argument in mm_extra_files:
+                    if isinstance(arguments, str):
+                        arguments = arguments.replace(
+                            argument, mm_extra_files[argument]
+                        )
+                    elif isinstance(arguments, list):
+                        arguments = [
+                            arg.replace(argument, mm_extra_files[argument])
+                            for arg in arguments
+                        ]
+
+        exec_vm_resource = RunHostExecutableScheduleEntry(
+            start_time, program, arguments
+        )
+        self.vm_resource_schedule.add_vm_resource(exec_vm_resource)
+        return exec_vm_resource
+
     def set_default_gateway(self, interface):
         """This method sets the ``default_gateway`` attribute for VMs associated with the given
         router's interface. If the VM host has a router as a neighbor than that router will become
@@ -1439,6 +1565,31 @@ class RunExecutableScheduleEntry(ScheduleEntry):
         # the VM. Add it as a file with a relative path of just its name
         if vm_resource:
             self.add_file(program, program, executable=True)
+
+
+class RunHostExecutableScheduleEntry(ScheduleEntry):
+    """
+    RunHostExecutableScheduleEntry facilitates specifying a program
+    to run from the physical host that launched the VM at a specified schedule time.
+    """
+
+    def __init__(self, start_time, program, arguments=None):
+        """
+        Create a :py:class:`base_objects.RunExecutableScheduleEntry` with the given parameters.
+
+        Args:
+            start_time (int): Start time of the schedule entry as an integer.
+            program (str): The program to run on the physical host. The program must be:
+                1) An absolute path to the executable (e.g., `/usr/bin/tar`)
+                2) The string "minimega", and therefore, will be handled directly by FIREWHEEL
+                3) Be an executable that is specified as a VM resource by the model component
+            arguments (str or list, optional): Arguments to pass on the command line to the program.
+                Must be a string or list of strings. Defaults to :py:data:`None`.
+        """
+
+        super().__init__(start_time)
+        self.set_executable(program, arguments)
+        self.on_host = True
 
 
 class FileTransferScheduleEntry(ScheduleEntry):
