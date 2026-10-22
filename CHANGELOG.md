@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.9.0 - 2026-10-22
+
+### 🚀 Features
+
+- feat: Adding ability to inject files into a disk [@sdelliot](https://github.com/sdelliot) ([#2](https://github.com/sandialabs/firewheel_repo_base/pull/2))
+- feat: Android Support [@gregjacobus](https://github.com/gregjacobus) ([#13](https://github.com/sandialabs/firewheel_repo_base/pull/13))
+- feat: Adding decorator model component information to enchance graph useability [@sdelliot](https://github.com/sdelliot) ([#15](https://github.com/sandialabs/firewheel_repo_base/pull/15))
+- feat: Schedule host-base actions within the VMR schedules [@sdelliot](https://github.com/sdelliot) ([#6](https://github.com/sandialabs/firewheel_repo_base/pull/6))
+
+### 🐛 Bug Fixes
+
+- fix: Address QOS functional test case issues [@sdelliot](https://github.com/sdelliot) ([#18](https://github.com/sandialabs/firewheel_repo_base/pull/18))
+- fix: Update ping command to handle errors gracefully [@sdelliot](https://github.com/sdelliot) ([#19](https://github.com/sandialabs/firewheel_repo_base/pull/19))
+- fix: tests.large_resource now creates parent directories [@sdelliot](https://github.com/sdelliot) ([#20](https://github.com/sandialabs/firewheel_repo_base/pull/20))
+
+### ⚠️ Changes
+
+- fix: tests.large_resource now creates parent directories [@sdelliot](https://github.com/sdelliot) ([#20](https://github.com/sandialabs/firewheel_repo_base/pull/20))
+- style: Use project formatting dependencies and enforce Ruff format checks [@mitchnegus](https://github.com/mitchnegus) ([#17](https://github.com/sandialabs/firewheel_repo_base/pull/17))
+
+### 📄 Documentation
+
+- docs(changelog): Remove unreleased section from the Changelog [@mitchnegus](https://github.com/mitchnegus) ([#12](https://github.com/sandialabs/firewheel_repo_base/pull/12))
+
+**Full Changelog**: https://github.com/sandialabs/firewheel_repo_base/compare/v2.8.1...v2.8.2
+
 ## v2.8.1 - 2026-01-28
 
 ### 🐛 Bug Fixes
