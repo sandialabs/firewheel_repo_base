@@ -18,7 +18,7 @@ class ConfigureIps(AbstractPlugin):
             # Add in default gateway information if it can be determined
             if vm.type == "router":
                 try:
-                    vm.interfaces.interfaces  # noqa: B018
+                    vm.interfaces.interfaces  # ruff: ignore[useless-expression]
                 except AttributeError:
                     continue
                 for interface in vm.interfaces.interfaces:
