@@ -86,7 +86,8 @@ class MinimegaEmulatedVM:
         """
         config_list = []
         try:
-            for interface in self.interfaces.interfaces:
+            interfaces = self.interfaces.interfaces
+            for interface in interfaces:
                 iface_conf = {
                     "name": "nic",
                     "id": f"if{len(config_list)}",
@@ -193,11 +194,11 @@ class MinimegaEmulatedVM:
         Args:
             config (dict): The configuration for the VM.
 
-        Raises:
-            RuntimeError: If a required configuration key is missing from an injection.
-
         Returns:
             list: A list of disk injections for the VM.
+
+        Raises:
+            RuntimeError: If a required configuration key is missing from an injection.
         """
         config_list = []
 

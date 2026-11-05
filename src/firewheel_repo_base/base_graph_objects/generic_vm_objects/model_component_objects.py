@@ -81,16 +81,8 @@ class GenericRouter:
             Exception: If some unknown error occurs while trying to redistribute routes.
         """
         try:
-            try:
-                self.routing["ospf"]["redistribution"] = {"bgp": {}}
-            except AttributeError:
-                self.routing = {"ospf": {"redistribution": {"bgp": {}}}}
-            except KeyError:
-                if "ospf" not in self.routing:
-                    self.routing["ospf"] = {}
-                if "redistribution" not in self.routing["ospf"]:
-                    self.routing["ospf"]["redistribution"] = {}
-                self.routing["ospf"]["redistribution"]["bgp"] = {}
+            ospf = self.routing.setdefault("ospf", {})
+            ospf["redistribution"] = {"bgp": {}}
         except Exception:
             self.log.exception(
                 "Cannot redistribute OSPF into BGP (%s)",
@@ -106,16 +98,8 @@ class GenericRouter:
             Exception: If some unknown error occurs while trying to redistribute routes.
         """
         try:
-            try:
-                self.routing["bgp"]["redistribution"] = {"ospf": {}}
-            except AttributeError:
-                self.routing = {"bgp": {"redistribution": {"ospf": {}}}}
-            except KeyError:
-                if "bgp" not in self.routing:
-                    self.routing["bgp"] = {}
-                if "redistribution" not in self.routing["bgp"]:
-                    self.routing["bgp"]["redistribution"] = {}
-                self.routing["bgp"]["redistribution"]["ospf"] = {}
+            bgp = self.routing.setdefault("bgp", {})
+            bgp["redistribution"] = {"ospf": {}}
         except Exception:
             self.log.exception(
                 "Cannot redistribute BGP into OSPF (%s)",
@@ -418,14 +402,15 @@ class GenericRouter:
                 if i["switch"] == neighbor_switch:
                     n_ip = i["address"]
                     break
-            if not v_ip or not n_ip:
-                raise RuntimeError(
-                    f"Unable to find IP address. Have {v_ip!s} for self "
-                    f"and {n_ip!s} for neighbor."
-                )
         except Exception:
             self.log.exception("Unable to get interfaces for BGP connection")
             raise
+
+        if not v_ip or not n_ip:
+            raise RuntimeError(
+                f"Unable to find IP address. Have {v_ip!s} for self "
+                f"and {n_ip!s} for neighbor."
+            )
 
         self.routing["bgp"]["neighbors"].append({"remote-as": n_as, "address": n_ip})
         neighbor.routing["bgp"]["neighbors"].append(
