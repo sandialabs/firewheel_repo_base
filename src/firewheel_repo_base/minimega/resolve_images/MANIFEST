@@ -6,7 +6,7 @@ attributes:
         - vm_image_details
 model_components:
     depends:
-        - linux.ubuntu1604
-        - vyos.helium118
+        - linux.ubuntu2204
+        - vyos.equuleus
         - minimega.emulated_entities
 plugin: plugin.py
