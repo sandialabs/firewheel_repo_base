@@ -24,6 +24,24 @@ class UploadSchedule(AbstractPlugin):
         """
         sched_db = ScheduleDb()
         vm_mapping = VMMapping()
+        # Always release the gRPC channel, even if collecting or uploading fails.
+        # An explicit ``try``/``finally`` (rather than ``with VMMapping()``) keeps
+        # this compatible with FIREWHEEL releases that predate context-manager
+        # support on ``VMMapping``.
+        try:
+            self._upload_schedules_and_mapping(sched_db, vm_mapping)
+        finally:
+            vm_mapping.close()
+
+    def _upload_schedules_and_mapping(self, sched_db, vm_mapping):
+        """
+        Collect every VM's schedule and mapping entry and batch-upload them.
+
+        Args:
+            sched_db (ScheduleDb): The schedule database to upload schedules to.
+            vm_mapping (VMMapping): The VM mapping database to upload mappings to.
+                Owned (and closed) by the caller.
+        """
         sched_list = []
         mapping_list = []
         for vert in self.g.get_vertices():
