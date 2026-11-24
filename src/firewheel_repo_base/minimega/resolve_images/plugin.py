@@ -1,6 +1,6 @@
 from base_objects import VMEndpoint
-from vyos.helium118 import Helium118
-from linux.ubuntu1604 import Ubuntu1604Server
+from vyos.equuleus import Equuleus
+from linux.ubuntu2204 import Ubuntu2204Server
 from minimega.emulated_entities import MinimegaEmulatedVM
 
 from firewheel.control.image_store import ImageStore
@@ -13,9 +13,9 @@ class ResolveVMImages(AbstractPlugin):
     """
 
     default_images = {
-        "host": Ubuntu1604Server,
-        "router": Helium118,
-        "switch": Ubuntu1604Server,
+        "host": Ubuntu2204Server,
+        "router": Equuleus,
+        "switch": Ubuntu2204Server,
     }
 
     def _assign_default_images(self):

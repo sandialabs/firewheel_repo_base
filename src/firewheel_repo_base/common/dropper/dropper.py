@@ -115,12 +115,12 @@ class Dropper(object):
                 # Open the tarball
                 with tarfile.open(self.binary_file) as tarball:
                     # Untar to the destination
-                    tarball.extractall(path=drop_location)  # noqa: S202
+                    tarball.extractall(path=drop_location)  # ruff: ignore[tarfile-unsafe-members]
             elif zipfile.is_zipfile(self.binary_file):
                 # Open the zipfile
                 with zipfile.ZipFile(self.binary_file, mode="r") as ziped:
                     # Unzip to the destination
-                    zipfile.ZipFile.extractall(ziped, path=drop_location)  # noqa: S202
+                    zipfile.ZipFile.extractall(ziped, path=drop_location)  # ruff: ignore[tarfile-unsafe-members]
             else:
                 print(
                     "ERROR: Unsupported archive format for file %s. "

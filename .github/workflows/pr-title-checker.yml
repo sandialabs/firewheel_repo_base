@@ -11,7 +11,10 @@ on:
 jobs:
   call-firewheel-pr-title-checker:
     name: Validate FIREWHEEL PR title
-    uses: sandialabs/firewheel_ci/.github/workflows/pr-title-checker.yml@main
+    permissions:
+      pull-requests: read
+    # zizmor: ignore[unpinned-uses] sandialabs/firewheel_ci is org-controlled; v1 is the intentionally maintained stable interface for FIREWHEEL consumers.
+    uses: sandialabs/firewheel_ci/.github/workflows/pr-title-checker.yml@v1
 
 permissions:
   pull-requests: read

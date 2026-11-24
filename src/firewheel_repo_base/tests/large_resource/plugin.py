@@ -12,7 +12,7 @@ class Plugin(AbstractPlugin):
     VM in the experiment.
     """
 
-    def run(self, size="1048576", location_dir="/tmp", preload="True"):  # noqa: S108
+    def run(self, size="1048576", location_dir="/tmp", preload="True"):  # ruff: ignore[hardcoded-temp-file]
         """
         Generate a new binary file, get its hash, and then drop both the
         binary and the ``hash_compare.py`` VMR on every VM in the experiment.

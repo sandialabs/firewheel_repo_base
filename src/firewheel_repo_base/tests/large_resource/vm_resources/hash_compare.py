@@ -22,7 +22,7 @@ def hash_file(fname):
     """
     # The following hash is not used in any security context and
     # collisions are acceptable.
-    hash_func = hashlib.sha1()  # noqa: S324
+    hash_func = hashlib.sha1()  # ruff: ignore[hashlib-insecure-hash-function]
     with open(fname, "rb") as fopened:
         for chunk in iter(lambda: fopened.read(1048576), b""):
             hash_func.update(chunk)
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     PREV_HASH = sys.argv[2]
 
     # We need a standard path for the status file
-    STATUS_FILE = "/tmp/status"  # noqa: S108
+    STATUS_FILE = "/tmp/status"  # ruff: ignore[hardcoded-temp-file]
 
     CURR_HASH = hash_file(PATH)
 

@@ -82,8 +82,6 @@ autolabeler:
       - /(documentation|doc|docs)[-/].+/
     title:
       - /(documentation|doc|docs)[:].+/
-    files:
-      - '*.rst'
   - label: 'style'
     branch:
       - /(style)[-/].+/

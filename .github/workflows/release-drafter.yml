@@ -4,22 +4,63 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - reopened
       - synchronize
       - labeled
       - unlabeled
-
-jobs:
-  call-firewheel-release-drafter:
-    name: Update release notes (FIREWHEEL-style)
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: write
-    uses: sandialabs/firewheel_ci/.github/workflows/release-drafter.yml@main
+  # This workflow uses pull_request_target only for release-drafter autolabeling on fork PRs.
+  # It does not check out PR code or run PR-supplied scripts, and it is limited to
+  # metadata operations through pinned actions with minimal job-scoped permissions.
+  # zizmor: ignore[dangerous-triggers]
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
 
 permissions:
   contents: read
+
+jobs:
+  update_release_draft:
+    name: Update the release notes
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Draft Release Notes
+        id: draft_release
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0
+        with:
+          config-name: release-drafter.yml
+
+  auto-label-pr:
+    name: Auto-label pull requests
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply configured PR labels
+        uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0
+        with:
+          config-name: release-drafter.yml
+
+  pr-checker:
+    name: Ensure Proper Pull Request Labels
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: agilepathway/label-checker@4c9ac452d37ed7c95024603468bd9de06e566a13
+        with:
+          any_of: feature,fix,style,changed,refactor,perf,test,build,ci,chore,revert,deprecated,removed,security,documentation,dependencies
+          repo_token: ${{ secrets.GITHUB_TOKEN }}

@@ -6,7 +6,7 @@ import json
 
 if __name__ == "__main__":
     # We need a standard path for the status file
-    STATUS_FILE = "/tmp/status"  # noqa: S108
+    STATUS_FILE = "/tmp/status"  # ruff: ignore[hardcoded-temp-file]
 
     if not os.path.exists(os.path.dirname(STATUS_FILE)):
         os.makedirs(os.path.dirname(STATUS_FILE))
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         with open(STATUS_FILE, "a", encoding="utf-8") as fhand:
             # If we saved any status here, we should add it to the status
             # file.
-            VAR_STATUS = "/var/tmp/status"  # noqa: S108
+            VAR_STATUS = "/var/tmp/status"  # ruff: ignore[hardcoded-temp-file]
             STATUS = ""
             if os.path.exists(VAR_STATUS):
                 with open(VAR_STATUS, "r", encoding="utf-8") as stat_file:
